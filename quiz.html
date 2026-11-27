@@ -1,0 +1,509 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebDevQuiz - Test Your Skills</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#eef0f2;color:#30343b;min-height:100vh;padding:20px}
+.container{max-width:850px;margin:25px auto;background:#fff;border:1px solid #dfe2e6;border-radius:18px;padding:25px;box-shadow:0 8px 30px #0000000b}
+header{text-align:center;margin-bottom:25px}
+header h1{font-size:30px;color:#30343b}
+header h1 span{color:#777}
+header p{color:#858b93;margin-top:8px}
+h2{margin-bottom:12px}
+.muted{color:#858b93;font-size:14px}
+.lengths{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}
+.length-btn{border:1px solid #d9dde2;background:#f5f6f7;padding:15px 5px;border-radius:10px;font-size:16px;cursor:pointer;color:#444}
+.length-btn:hover,.length-btn.active{background:#454b54;color:white;border-color:#454b54}
+button{cursor:pointer;border:0;border-radius:9px;padding:12px 18px;font-size:15px}
+.primary{background:#454b54;color:white;width:100%;margin-top:15px}
+.primary:hover{background:#30343b}
+.secondary{background:#e9ebee;color:#333}
+.topline{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px}
+.progress-bg{height:9px;background:#e8eaed;border-radius:20px;overflow:hidden;margin-bottom:22px}
+.progress-fill{height:100%;width:0;background:#737b86;transition:.3s}
+.question{font-size:21px;line-height:1.5;margin:15px 0 22px}
+.options{display:grid;gap:12px}
+.option{padding:14px;text-align:left;background:#f4f5f6;border:1px solid #e1e3e6;color:#34383e;border-radius:10px}
+.option:hover{background:#e9ebee}
+.option.selected{background:#dfe3e8;border:2px solid #626b77}
+.option.correct{background:#e1f1e6;border:1px solid #69a77b}
+.option.wrong{background:#f9e5e5;border:1px solid #cf7777}
+.exam-actions{display:flex;gap:10px;margin-top:20px}
+.exam-actions button{flex:1}
+#feedback{margin-top:14px;padding:12px;border-radius:8px;display:none}
+#feedback.good{display:block;background:#e6f3e9;color:#27633a}
+#feedback.bad{display:block;background:#fae9e9;color:#8a3434}
+.hidden{display:none!important}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.stat{background:#f1f2f4;border:1px solid #e2e4e7;padding:17px 10px;text-align:center;border-radius:12px}
+.stat strong{font-size:25px;display:block;margin-bottom:5px}
+.stat small{color:#777}
+.topic-row{margin:15px 0}
+.topic-head{display:flex;justify-content:space-between;margin-bottom:7px;font-size:14px}
+.topic-bg{height:9px;background:#e8eaed;border-radius:20px;overflow:hidden}
+.topic-fill{height:100%;background:#777f89}
+.review-item{padding:14px 0;border-bottom:1px solid #e6e7e9}
+.review-item p{margin:7px 0}
+.review-item .answer{color:#35734b;font-size:14px}
+.review-item .your-answer{color:#a33d3d;font-size:14px}
+.dashboard-section{margin-top:25px}
+.dashboard-section h3{margin-bottom:12px}
+@media(max-width:520px){
+ body{padding:8px}
+ .container{padding:18px;margin:10px auto}
+ .lengths{grid-template-columns:repeat(2,1fr)}
+ .stats{grid-template-columns:repeat(2,1fr)}
+ .question{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<header>
+<h1>WebDev<span>Quiz.</span></h1>
+<p>Learn. Practice. Improve your web development skills.</p>
+</header>
+
+<section id="home">
+<h2>Welcome to the quiz!</h2>
+<p class="muted">Choose how many questions you want in your exam.</p>
+
+<div class="lengths" id="lengths">
+<button class="length-btn active" data-length="20">20 Questions</button>
+<button class="length-btn" data-length="40">40 Questions</button>
+<button class="length-btn" data-length="60">60 Questions</button>
+<button class="length-btn" data-length="80">80 Questions</button>
+<button class="length-btn" data-length="100">100 Questions</button>
+<button class="length-btn" data-length="150">150 Questions</button>
+<button class="length-btn" data-length="200">200 Questions</button>
+</div>
+
+<div class="stat">
+<strong>200</strong>
+<small>Questions in question bank</small>
+</div>
+<button class="primary" onclick="startExam()">Start Exam →</button>
+
+<div class="dashboard-section">
+<h3>Your Overall Progress</h3>
+<div class="stats">
+<div class="stat"><strong id="totalAttempts">0</strong><small>Exams completed</small></div>
+<div class="stat"><strong id="bestScore">0%</strong><small>Best accuracy</small></div>
+<div class="stat"><strong id="averageScore">0%</strong><small>Average accuracy</small></div>
+</div>
+</div>
+</section>
+
+<section id="exam" class="hidden">
+<div class="topline">
+<span id="questionNumber">Question 1 of 20</span>
+<span id="examTopic" class="muted">HTML</span>
+</div>
+<div class="progress-bg"><div class="progress-fill" id="progress"></div></div>
+<div class="question" id="questionText"></div>
+<div class="options" id="options"></div>
+<div id="feedback"></div>
+<div class="exam-actions">
+<button class="secondary" onclick="previousQuestion()">← Previous</button>
+<button class="primary" style="margin:0" id="nextBtn" onclick="nextQuestion()">Next →</button>
+</div>
+<button class="secondary" style="width:100%;margin-top:12px" onclick="finishExam()">Submit Exam</button>
+</section>
+
+<section id="result" class="hidden">
+<h2>Exam Completed!</h2>
+<p class="muted">Here is your performance dashboard.</p>
+<div class="stats">
+<div class="stat"><strong id="finalScore">0/20</strong><small>Score</small></div>
+<div class="stat"><strong id="accuracy">0%</strong><small>Accuracy</small></div>
+<div class="stat"><strong id="correctCount">0</strong><small>Correct answers</small></div>
+<div class="stat"><strong id="wrongCount">0</strong><small>Wrong answers</small></div>
+<div class="stat"><strong id="unanswered">0</strong><small>Unanswered</small></div>
+<div class="stat"><strong id="grade">-</strong><small>Performance</small></div>
+</div>
+
+<div class="dashboard-section">
+<h3>Topic-wise Performance</h3>
+<div id="topicResults"></div>
+</div>
+
+<div class="dashboard-section">
+<h3>Answer Review</h3>
+<div id="review"></div>
+</div>
+
+<button class="primary" onclick="restartExam()">Take Another Exam</button>
+<button class="secondary" style="width:100%;margin-top:10px" onclick="goHome()">Back to Home</button>
+</section>
+</div>
+
+<script>
+// Each concept creates four different practice questions.
+// 50 concepts × 4 = 200 questions.
+
+const concepts = [
+["HTML","HTML","The standard markup language used to structure web pages.","HTML describes the structure of a webpage.","CSS styles a webpage.","JavaScript adds interaction."],
+["HTML","DOCTYPE","Declares the HTML document type.","<!DOCTYPE html>","<html type='document'>","<document html>"],
+["HTML","html element","The root element of an HTML document.","<html lang='en'>","<root>Page</root>","<body-root>"],
+["HTML","head element","Contains metadata and page information.","<head><title>Page</title></head>","<head>Visible content</head>","<footer>Page data</footer>"],
+["HTML","title element","Sets the title shown in the browser tab.","<title>My Website</title>","<h1>My Website</h1>","<tab>My Website</tab>"],
+["HTML","body element","Contains the visible page content.","<body><h1>Hello</h1></body>","<head><h1>Hello</h1></head>","<page><h1>Hello</h1></page>"],
+["HTML","h1 element","Represents a top-level heading.","<h1>Welcome</h1>","<heading1>Welcome</heading1>","<head>Welcome</head>"],
+["HTML","paragraph element","Defines a paragraph of text.","<p>Hello world</p>","<para>Hello world</para>","<text>Hello world</text>"],
+["HTML","anchor element","Creates a hyperlink to another location.","<a href='page.html'>Open</a>","<linkto>Open</linkto>","<url>Open</url>"],
+["HTML","image element","Embeds an image in a webpage.","<img src='photo.jpg' alt='Photo'>","<image>photo.jpg</image>","<picture src='photo.jpg'>"],
+["HTML","alt attribute","Provides alternative text for an image.","<img src='cat.jpg' alt='A cat'>","<img description='A cat'>","<img title-text='A cat'>"],
+["HTML","unordered list","Creates a bulleted list.","<ul><li>Apple</li></ul>","<ol><li>Apple</li></ol>","<list type='bullet'>Apple</list>"],
+["HTML","ordered list","Creates a numbered list.","<ol><li>First</li></ol>","<ul number='1'><li>First</li></ul>","<numberlist>First</numberlist>"],
+["HTML","list item","Defines an item inside a list.","<li>Item</li>","<item>Item</item>","<listitem>Item</listitem>"],
+["HTML","table element","Creates a table for tabular data.","<table><tr><td>Data</td></tr></table>","<grid><data>Data</data></grid>","<tabular>Data</tabular>"],
+["HTML","form element","Groups controls for collecting user input.","<form><input></form>","<inputform>Text</inputform>","<collect>Text</collect>"],
+["HTML","input element","Creates an interactive input control.","<input type='text'>","<textbox-input>","<enter type='text'>"],
+["HTML","button element","Creates a clickable button.","<button>Submit</button>","<click>Submit</click>","<press>Submit</press>"],
+["HTML","label element","Provides a caption for a form control.","<label for='email'>Email</label>","<caption for='email'>Email</caption>","<name>Email</name>"],
+["HTML","semantic elements","Describe the meaning and role of page content.","<header><nav></nav><main></main></header>","<div1><div2></div2></div1>","<box><box></box></box>"],
+
+["CSS","CSS","The language used to style HTML elements.","CSS controls colors, spacing and layout.","CSS stores website data.","CSS creates database tables."],
+["CSS","color property","Changes the text color.","color: red;","background: red;","font-size: red;"],
+["CSS","background-color","Changes an element's background color.","background-color: lightblue;","text-color: lightblue;","font: lightblue;"],
+["CSS","font-size","Controls the size of text.","font-size: 20px;","text-width: 20px;","font-height: 20px;"],
+["CSS","font-family","Sets the typeface used for text.","font-family: Arial, sans-serif;","font-style: Arial;","text-family: Arial;"],
+["CSS","margin","Controls space outside an element's border.","margin: 20px;","padding: 20px;","border: 20px;"],
+["CSS","padding","Controls space inside an element's border.","padding: 15px;","margin: 15px;","outline: 15px;"],
+["CSS","border","Adds a border around an element.","border: 1px solid black;","edge: black;","line-color: black;"],
+["CSS","border-radius","Rounds the corners of an element.","border-radius: 10px;","corner: 10px;","rounding: 10px;"],
+["CSS","display flex","Creates a flexible layout container.","display: flex;","display: flexible;","position: flex;"],
+["CSS","justify-content","Aligns flex items along the main axis.","justify-content: center;","align-items: center;","text-align: flex;"],
+["CSS","align-items","Aligns flex items along the cross axis.","align-items: center;","justify-content: center;","vertical-flex: center;"],
+["CSS","CSS Grid","Creates a two-dimensional grid layout.","display: grid; grid-template-columns: 1fr 1fr;","display: table-grid;","position: grid;"],
+["CSS","ID selector","Selects an element by its unique ID.","#header { color: black; }",".header { color: black; }","header { id: black; }"],
+["CSS","class selector","Selects elements with a matching class.",".card { padding: 10px; }","#card { padding: 10px; }","card() { padding: 10px; }"],
+["CSS","hover pseudo-class","Applies styles when a pointer hovers over an element.","button:hover { background: gray; }","button:click { background: gray; }","button:press { background: gray; }"],
+["CSS","media query","Applies styles based on device or viewport conditions.","@media (max-width: 600px) { body { font-size: 14px; } }","@screen-small { body { font-size: 14px; } }","@device { body { font-size: 14px; } }"],
+["CSS","position fixed","Positions an element relative to the viewport.","position: fixed; bottom: 0;","position: static-fixed;","display: fixed;"],
+["CSS","z-index","Controls the stacking order of positioned elements.","z-index: 10;","stack-order: 10;","layer-index: 10;"],
+["CSS","overflow","Controls content that exceeds an element's box.","overflow: auto;","content-flow: auto;","extra-content: auto;"],
+
+["JavaScript","JavaScript","A programming language commonly used to add webpage behavior.","JavaScript can respond to clicks and update page content.","JavaScript is only used to style text.","JavaScript is a type of image file."],
+["JavaScript","let","Declares a block-scoped variable that can be reassigned.","let score = 10;","fixed score = 10;","variable: score = 10;"],
+["JavaScript","const","Declares a block-scoped binding that cannot be reassigned.","const siteName = 'Quiz';","const siteName; siteName = 'Quiz';","constant siteName := 'Quiz';"],
+["JavaScript","function","Defines reusable code that can be called.","function greet() { return 'Hello'; }","make greet() { return 'Hello'; }","define greet = 'Hello';"],
+["JavaScript","console.log","Prints information to the browser console.","console.log('Hello');","print.console('Hello');","browser.write('Hello');"],
+["JavaScript","alert","Displays a browser alert dialog.","alert('Welcome');","message.box('Welcome');","console.alertText('Welcome');"],
+["JavaScript","document.getElementById","Finds an element using its ID.","document.getElementById('title')","document.findClass('title')","window.getTag('title')"],
+["JavaScript","addEventListener","Registers a handler for an event.","button.addEventListener('click', greet);","button.listenClick(greet);","button.onEventAdd(greet);"],
+["JavaScript","if statement","Runs code when a condition is true.","if (score > 50) { pass(); }","when score > 50 then pass();","check score > 50: pass();"],
+["JavaScript","for loop","Repeats code using an initialization, condition and update.","for (let i=0; i<5; i++) {}","repeat (i in 5) {}","loop i until 5 {}"],
+["JavaScript","array","Stores an ordered collection of values.","const colors = ['red', 'blue'];","const colors = {red, blue};","const colors = 'red, blue';"],
+["JavaScript","push method","Adds an item to the end of an array.","colors.push('green');","colors.addFirst('green');","colors.insertStart('green');"],
+["JavaScript","length property","Returns the number of items in an array or characters in a string.","items.length","items.size()","items.countAll()"],
+["JavaScript","strict equality","Checks equality without automatic type conversion.","5 === '5'","5 = '5'","5 !== '5'"],
+["JavaScript","arrow function","Provides a shorter function expression syntax.","const add = (a,b) => a+b;","const add = (a,b) -> a+b;","function => add(a,b);"],
+["JavaScript","object","Stores data as key-value properties.","const user = {name: 'Sam'};","const user = ['name', 'Sam'];","const user = (name: 'Sam');"],
+["JavaScript","JSON","A text format for storing and exchanging structured data.","JSON.stringify({name:'Sam'})","JSON.convertHTML('<p>')","JSON.makeStyle('red')"],
+["JavaScript","parseInt","Parses a string and returns an integer when possible.","parseInt('42', 10)","parseFloat('42.5')","toString(42)"],
+["JavaScript","localStorage","Stores key-value data in the browser across sessions.","localStorage.setItem('theme','dark');","sessionStorage.clearAllForever();","browser.saveFile('theme');"],
+["JavaScript","promise","Represents the eventual completion or failure of an asynchronous operation.","fetch('/data').then(response => response.json())","waitUntil('/data')","asyncResult('/data').stop()"],
+
+["Web Basics","HTTP","A protocol used for transferring web resources.","HTTP is used for communication between browsers and servers.","HTTP is a programming language.","HTTP is an image editor."],
+["Web Basics","HTTPS","HTTP secured using encryption with TLS.","https://example.com","ftp://example.com","file://example.com"],
+["Web Basics","URL","The address of a resource on the internet.","https://example.com/about","<h1>About</h1>","color: blue;"],
+["Web Basics","DNS","Translates domain names into IP addresses.","DNS helps find the server for example.com.","DNS styles HTML elements.","DNS compresses images."],
+["Web Basics","IP address","A numerical address used to identify a device or network interface.","192.0.2.1","example.com","index.html"],
+["Web Basics","web browser","Software used to access and display web pages.","Chrome can display HTML and CSS.","A database stores browser tabs.","A compiler styles web pages."],
+["Web Basics","web server","Software or hardware that serves web content to clients.","A server can respond to an HTTP request.","A server is an HTML heading.","A server is a CSS selector."],
+["Web Basics","frontend","The part of an application users interact with.","HTML, CSS and browser JavaScript are frontend technologies.","Database backups are the frontend.","Server cooling is the frontend."],
+["Web Basics","backend","The server-side part that handles logic and data.","A backend can authenticate users and access a database.","A color palette is a backend.","A browser font is a backend."],
+["Web Basics","API","A defined way for software systems to communicate.","An API can let a website request weather data.","An API is a CSS border.","An API is a browser bookmark."],
+
+["Git","Git","A version control system for tracking changes in files.","Git records project history.","Git is a web browser.","Git is a CSS framework."],
+["Git","git init","Initializes a new Git repository.","git init","git start-project","git create-web"],
+["Git","git add","Stages changes for the next commit.","git add index.html","git save index.html","git upload index.html"],
+["Git","git commit","Records staged changes in repository history.","git commit -m 'First commit'","git record-now","git push -m 'First commit'"],
+["Git","git status","Shows the current state of the working tree.","git status","git show-state","git check-files"],
+["Git","git clone","Copies an existing repository.","git clone https://example.com/repo.git","git copy-repo-now","git download-branch"],
+["Git","git push","Sends local commits to a remote repository.","git push origin main","git send origin main","git upload-commit main"],
+["Git","git pull","Fetches and integrates changes from a remote repository.","git pull origin main","git take origin main","git merge-online main"],
+["Git","branch","A separate line of development in Git.","git branch feature-login","git file feature-login","git folder feature-login"],
+["Git","merge","Combines changes from different branches.","git merge feature-login","git join-file feature-login","git combine-folder feature-login"],
+
+["Security","input validation","Checks that user input follows expected rules.","Check that an email field contains a valid email address.","Trust every submitted value.","Display passwords in public."],
+["Security","authentication","Verifies the identity of a user.","Logging in with valid credentials is authentication.","Choosing a page color is authentication.","Sorting a list is authentication."],
+["Security","authorization","Determines what an authenticated user is allowed to do.","Checking whether a user can edit a post is authorization.","Checking text spelling is authorization.","Loading an image is authorization."],
+["Security","SQL injection","An attack that attempts to alter database queries through unsafe input.","Parameterized queries help prevent SQL injection.","Using larger fonts prevents SQL injection.","Compressing images prevents SQL injection."],
+["Security","XSS","A vulnerability where injected scripts execute in another user's browser.","Escaping untrusted content helps prevent XSS.","Changing a button color prevents XSS.","Using a larger screen prevents XSS."],
+["Security","password hashing","Transforms a password into a one-way derived value for storage.","A password hashing algorithm such as Argon2 can protect stored passwords.","Store every password as plain text.","Put passwords in a public HTML comment."],
+["Security","HTTPS certificate","Helps authenticate a website and establish encrypted connections.","A valid TLS certificate is used by HTTPS websites.","A favicon encrypts a website.","A CSS file authenticates a server."],
+["Security","environment variable","Stores configuration outside source code.","A server can read a database URL from an environment variable.","Put secret keys in public JavaScript.","Put passwords in a webpage title."],
+["Security","CORS","A browser mechanism controlling cross-origin requests.","A server can use CORS headers to allow selected origins.","CORS changes font sizes.","CORS creates HTML forms."],
+["Security","least privilege","Gives users and systems only the permissions they need.","A read-only account should not have database delete permission.","Give every account administrator access.","Share every secret with all users."],
+
+["Accessibility","accessibility","Designing websites so people with different abilities can use them.","Accessible websites support a wider range of users.","Accessibility means using only animations.","Accessibility means removing all text."],
+["Accessibility","alt text","Text that describes meaningful images for assistive technology.","alt='A red bicycle'","alt='image123.jpg' for every image","alt=' ' for every informative image"],
+["Accessibility","keyboard navigation","Allows users to operate controls using a keyboard.","A user can move through links using the Tab key.","A user must always use a mouse.","A user must tap a touchscreen."],
+["Accessibility","ARIA","Attributes that can communicate roles and states to assistive technology.","aria-label='Close menu'","aria-color='blue'","aria-font='large'"],
+["Accessibility","label association","Connects a form label to its control.","<label for='email'>Email</label><input id='email'>","<label>Email</label><input id='password'> with no connection","<label href='email'>Email</label>"],
+["Accessibility","contrast","The difference in visual appearance between text and its background.","Strong text-background contrast improves readability.","Very pale text on a pale background is always best.","Text contrast is unrelated to readability."],
+["Accessibility","semantic HTML","Uses elements according to their meaning and purpose.","Use <nav> for navigation.","Use <div> for every element regardless of purpose.","Use <span> as the page title element."],
+["Accessibility","focus indicator","Shows which interactive element currently has keyboard focus.","button:focus { outline: 2px solid; }","button:focus { display: none; }","button:focus { visibility: hidden; }"],
+["Accessibility","caption","Text that provides spoken content information for video users.","A video can include captions for dialogue.","A video caption changes the video resolution.","A caption is a database password."],
+["Accessibility","skip link","Lets keyboard users bypass repeated navigation to reach main content.","<a href='#main'>Skip to content</a>","<a href='#top'>Repeat navigation</a>","<button>Disable keyboard</button>"],
+
+["Responsive Design","responsive design","Makes layouts adapt to different screen sizes and devices.","A responsive page adapts to mobile and desktop screens.","A responsive page only works on desktops.","A responsive page requires a different URL for every screen."],
+["Responsive Design","viewport meta tag","Sets the viewport dimensions and scaling on mobile browsers.","<meta name='viewport' content='width=device-width, initial-scale=1'>","<meta name='screen' content='desktop'>","<viewport width='mobile'>"],
+["Responsive Design","flex-wrap","Allows flex items to move onto additional lines.","flex-wrap: wrap;","flex-items: overflow;","flex-break: true;"],
+["Responsive Design","relative unit","A unit based on another value, such as the parent font size or viewport.","2rem","200px","5cm"],
+["Responsive Design","rem","A CSS unit relative to the root element's font size.","font-size: 1.5rem;","font-size: 1.5rootpx;","font-size: 1.5screen;"],
+["Responsive Design","vw","A CSS unit representing a percentage of viewport width.","width: 50vw;","width: 50vh;","width: 50rem;"],
+["Responsive Design","max-width","Sets the maximum width an element can have.","max-width: 900px;","minimum-width: 900px;","width-limit-low: 900px;"],
+["Responsive Design","mobile-first design","Starts design for small screens and progressively enhances it.","Write base styles for mobile, then add wider-screen media queries.","Design only for large screens.","Remove all mobile styles."],
+["Responsive Design","CSS breakpoint","A viewport width where responsive styles change.","@media (min-width: 768px) {}","@breakpoint tablet {}","@screen-change 768 {}"],
+["Responsive Design","fluid layout","Uses flexible sizing to adapt to available space.","width: 90%; max-width: 1100px;","width: always-900px;","position: fixed-screen;"]
+];
+
+const bank = [];
+const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+
+concepts.forEach((c, index) => {
+  const [topic, term, meaning, example, wrong1, wrong2] = c;
+  const sameTopic = concepts.filter(x => x[0] === topic && x[1] !== term);
+  const otherMeanings = shuffle(sameTopic).slice(0,3).map(x => x[2]);
+  const otherExamples = shuffle(sameTopic).slice(0,3).map(x => x[3]);
+
+  const questionTypes = [
+    {
+      q: `What is the main purpose of ${term}?`,
+      answer: meaning,
+      wrong: otherMeanings
+    },
+    {
+      q: `Which example correctly represents ${term}?`,
+      answer: example,
+      wrong: otherExamples
+    },
+    {
+      q: `Which statement correctly describes ${term}?`,
+      answer: meaning,
+      wrong: [wrong1, wrong2, ...otherMeanings].slice(0,3)
+    },
+    {
+      q: `Choose the correct example or usage of ${term}.`,
+      answer: example,
+      wrong: [wrong1, wrong2, ...otherExamples].slice(0,3)
+    }
+  ];
+
+  questionTypes.forEach((item, i) => {
+    const options = shuffle([item.answer, ...item.wrong.slice(0,3)]);
+    bank.push({
+      id: `${index}-${i}`,
+      topic,
+      question: item.q,
+      options,
+      answer: options.indexOf(item.answer),
+      explanation: `${term}: ${meaning}`
+    });
+  });
+});
+
+let selectedLength = 20;
+let questions = [];
+let answers = [];
+let current = 0;
+
+document.querySelectorAll(".length-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".length-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedLength = Number(btn.dataset.length);
+  });
+});
+
+function showSection(id) {
+  ["home","exam","result"].forEach(s =>
+    document.getElementById(s).classList.toggle("hidden", s !== id)
+  );
+}
+
+function startExam() {
+  questions = shuffle(bank).slice(0, selectedLength);
+  answers = Array(questions.length).fill(null);
+  current = 0;
+  showSection("exam");
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = questions[current];
+  document.getElementById("questionNumber").textContent =
+    `Question ${current+1} of ${questions.length}`;
+  document.getElementById("examTopic").textContent = q.topic;
+  document.getElementById("questionText").textContent = q.question;
+  document.getElementById("progress").style.width =
+    `${((current+1)/questions.length)*100}%`;
+
+  const options = document.getElementById("options");
+  options.innerHTML = "";
+
+  q.options.forEach((option, index) => {
+    const btn = document.createElement("button");
+    btn.className = "option";
+    btn.textContent = `${String.fromCharCode(65+index)}. ${option}`;
+
+    if (answers[current] === index) btn.classList.add("selected");
+
+    btn.onclick = () => {
+      answers[current] = index;
+      showQuestion();
+    };
+    options.appendChild(btn);
+  });
+
+  const feedback = document.getElementById("feedback");
+  feedback.style.display = "none";
+  feedback.className = "";
+
+  document.getElementById("nextBtn").textContent =
+    current === questions.length-1 ? "Finish →" : "Next →";
+}
+
+function previousQuestion() {
+  if (current > 0) {
+    current--;
+    showQuestion();
+  }
+}
+
+function nextQuestion() {
+  if (current < questions.length-1) {
+    current++;
+    showQuestion();
+  } else {
+    finishExam();
+  }
+}
+
+function finishExam() {
+  const unansweredCount = answers.filter(a => a === null).length;
+  const confirmSubmit = unansweredCount > 0
+    ? confirm(`You have ${unansweredCount} unanswered questions. Submit anyway?`)
+    : confirm("Submit your exam and view your results?");
+
+  if (!confirmSubmit) return;
+
+  const correct = questions.filter((q,i) => answers[i] === q.answer).length;
+  const wrong = questions.filter((q,i) => answers[i] !== null && answers[i] !== q.answer).length;
+  const unanswered = unansweredCount;
+  const percent = Math.round(correct/questions.length*100);
+
+  document.getElementById("finalScore").textContent = `${correct}/${questions.length}`;
+  document.getElementById("accuracy").textContent = `${percent}%`;
+  document.getElementById("correctCount").textContent = correct;
+  document.getElementById("wrongCount").textContent = wrong;
+  document.getElementById("unanswered").textContent = unanswered;
+
+  let grade = "Keep practicing";
+  if (percent >= 90) grade = "Excellent!";
+  else if (percent >= 75) grade = "Very good";
+  else if (percent >= 60) grade = "Good";
+  else if (percent >= 40) grade = "Keep learning";
+  document.getElementById("grade").textContent = grade;
+
+  showTopicResults();
+  showReview();
+  saveProgress(percent);
+  updateOverallDashboard();
+  showSection("result");
+}
+
+function showTopicResults() {
+  const topics = {};
+  questions.forEach((q,i) => {
+    if (!topics[q.topic]) topics[q.topic] = {total:0, correct:0};
+    topics[q.topic].total++;
+    if (answers[i] === q.answer) topics[q.topic].correct++;
+  });
+
+  const container = document.getElementById("topicResults");
+  container.innerHTML = "";
+
+  Object.entries(topics).forEach(([name,data]) => {
+    const percent = Math.round(data.correct/data.total*100);
+    const row = document.createElement("div");
+    row.className = "topic-row";
+    row.innerHTML = `
+      <div class="topic-head">
+        <strong>${name}</strong>
+        <span>${data.correct}/${data.total} (${percent}%)</span>
+      </div>
+      <div class="topic-bg"><div class="topic-fill" style="width:${percent}%"></div></div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function showReview() {
+  const review = document.getElementById("review");
+  review.innerHTML = "";
+
+  questions.forEach((q,i) => {
+    const item = document.createElement("div");
+    item.className = "review-item";
+
+    const yourAnswer = answers[i] === null
+      ? "Not answered"
+      : q.options[answers[i]];
+
+    const correctAnswer = q.options[q.answer];
+
+    item.innerHTML = `
+      <strong>${i+1}. ${q.question}</strong>
+      <p class="your-answer">Your answer: ${yourAnswer}</p>
+      <p class="answer">Correct answer: ${correctAnswer}</p>
+      <p class="muted">${q.explanation}</p>
+    `;
+    review.appendChild(item);
+  });
+}
+
+function saveProgress(percent) {
+  let history = JSON.parse(localStorage.getItem("webQuizHistory") || "[]");
+  history.push({
+    score: percent,
+    length: questions.length,
+    date: new Date().toLocaleDateString()
+  });
+  localStorage.setItem("webQuizHistory", JSON.stringify(history));
+}
+
+function updateOverallDashboard() {
+  const history = JSON.parse(localStorage.getItem("webQuizHistory") || "[]");
+  const scores = history.map(x => x.score);
+  const best = scores.length ? Math.max(...scores) : 0;
+  const average = scores.length
+    ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length)
+    : 0;
+
+  document.getElementById("totalAttempts").textContent = history.length;
+  document.getElementById("bestScore").textContent = `${best}%`;
+  document.getElementById("averageScore").textContent = `${average}%`;
+}
+
+function restartExam() {
+  startExam();
+}
+
+function goHome() {
+  showSection("home");
+  updateOverallDashboard();
+}
+
+updateOverallDashboard();
+</script>
+</body>
+</html>
